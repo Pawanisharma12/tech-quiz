@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tech Quiz App</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: #0f2027;  /* dark tech blue gradient */
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #eee;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Tech pattern background with SVG icons repeated */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      url('data:image/svg+xml;utf8,<svg fill="%2366fcf1" opacity="0.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 21H7v-2h2v2zM14 7v1h-4v-1a1 1 0 011-1h2a1 1 0 011 1zm5 9h-2v-2h2v2zM3 13v-2h2v2H3zm18-6h-2v2h2V7zm-7 7a4 4 0 11-4-4 4 4 0 014 4z"/></svg>'),
+      url('data:image/svg+xml;utf8,<svg fill="%2366fcf1" opacity="0.05" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 21H7v-2h2v2zM14 7v1h-4v-1a1 1 0 011-1h2a1 1 0 011 1zm5 9h-2v-2h2v2zM3 13v-2h2v2H3zm18-6h-2v2h2V7zm-7 7a4 4 0 11-4-4 4 4 0 014 4z"/></svg>');
+    background-repeat: repeat;
+    background-position: 0 0, 50px 50px;
+    background-size: 100px 100px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    background: rgba(30, 30, 40, 0.85);
+    padding: 30px 40px;
+    border-radius: 15px;
+    width: 350px;
+    box-shadow: 0 0 15px #0ff;
+    z-index: 1;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #66fcf1;
+  }
+
+  #question {
+    font-size: 1.25rem;
+    margin-bottom: 15px;
+  }
+
+  .options button {
+    width: 100%;
+    background: transparent;
+    border: 2px solid #66fcf1;
+    color: #66fcf1;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .options button:hover:not(:disabled) {
+    background: #66fcf1;
+    color: #0f2027;
+  }
+
+  .options button.correct {
+    background-color: #28a745; /* green */
+    border-color: #28a745;
+    color: white;
+  }
+
+  .options button.wrong {
+    background-color: #dc3545; /* red */
+    border-color: #dc3545;
+    color: white;
+  }
+
+  button#next-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background: #66fcf1;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #0f2027;
+    transition: background 0.3s;
+  }
+
+  button#next-btn:disabled {
+    background: #44baba;
+    cursor: not-allowed;
+  }
+
+  #result {
+    text-align: center;
+    font-size: 1.3rem;
+    margin-top: 20px;
+    color: #66fcf1;
+  }
+
+  #explanation {
+    margin-top: 10px;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #bbb;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tech Quiz</h1>
+    <div id="question">Loading...</div>
+    <div class="options"></div>
+    <button id="next-btn" disabled>Next</button>
+    <div id="explanation"></div>
+    <div id="result"></div>
+  </div>
+
+<script>
+  const quizData = [
+    {
+      question: "What does HTML stand for?",
+      options: ["Hyper Text Markup Language", "Hot Mail", "How to Make Lasagna", "Hyperlinks and Text Markup Language"],
+      answer: 0,
+      explanation: "HTML stands for Hyper Text Markup Language, which is used to create web pages."
+    },
+    {
+      question: "Which language is used for styling web pages?",
+      options: ["HTML", "JQuery", "CSS", "XML"],
+      answer: 2,
+      explanation: "CSS (Cascading Style Sheets) is used to style the look of web pages."
+    },
+    {
+      question: "Which one is a JavaScript framework?",
+      options: ["React", "Laravel", "Django", "Rails"],
+      answer: 0,
+      explanation: "React is a popular JavaScript library for building user interfaces."
+    },
+    {
+      question: "Which company developed the Java programming language?",
+      options: ["Sun Microsystems", "Apple", "Microsoft", "Google"],
+      answer: 0,
+      explanation: "Java was developed by Sun Microsystems (now owned by Oracle)."
+    }
+  ];
+
+  const questionEl = document.getElementById("question");
+  const optionsEl = document.querySelector(".options");
+  const nextBtn = document.getElementById("next-btn");
+  const explanationEl = document.getElementById("explanation");
+  const resultEl = document.getElementById("result");
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+
+  function loadQuestion() {
+    explanationEl.textContent = "";
+    resultEl.textContent = "";
+    nextBtn.disabled = true;
+    const currentQuestion = quizData[currentQuestionIndex];
+    questionEl.textContent = currentQuestion.question;
+
+    optionsEl.innerHTML = "";
+    currentQuestion.options.forEach((option, index) => {
+      const button = document.createElement("button");
+      button.textContent = option;
+      button.addEventListener("click", () => selectAnswer(index, button));
+      optionsEl.appendChild(button);
+    });
+  }
+
+  function selectAnswer(selectedIndex, button) {
+    const currentQuestion = quizData[currentQuestionIndex];
+    const buttons = optionsEl.querySelectorAll("button");
+
+    buttons.forEach(btn => btn.disabled = true);
+    nextBtn.disabled = false;
+
+    if (selectedIndex === currentQuestion.answer) {
+      button.classList.add("correct");
+      score++;
+    } else {
+      button.classList.add("wrong");
+      buttons[currentQuestion.answer].classList.add("correct");
+    }
+
+    explanationEl.textContent = currentQuestion.explanation;
+  }
+
+  nextBtn.addEventListener("click", () => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+      loadQuestion();
+    } else {
+      showResult();
+    }
+  });
+
+  function showResult() {
+    questionEl.style.display = "none";
+    optionsEl.style.display = "none";
+    nextBtn.style.display = "none";
+    explanationEl.style.display = "none";
+
+    resultEl.textContent = `You scored ${score} out of ${quizData.length}! 🎉`;
+  }
+
+  loadQuestion();
+</script>
+</body>
+</html>
